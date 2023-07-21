@@ -68,31 +68,23 @@ class SPNO1d(nn.Module):
         self.padding = 2  # pad the domain if input is non-periodic
         # input channel is 2: (a(x), x)
         self.fc0 = nn.Linear(2, self.width)
-        # self.fc01 = nn.Linear(2, self.width)
-        # self.fc02 = nn.Linear(2, self.width)
+
 
         self.conv0 = SpectralConv1d(self.width, self.width, self.modes1)
         self.conv1 = SpectralConv1d(self.width, self.width, self.modes1)
         self.conv2 = SpectralConv1d(self.width, self.width, self.modes1)
         self.conv3 = SpectralConv1d(self.width, self.width, self.modes1)
         self.conv4 = SpectralConv1d(self.width, self.width, self.modes1)
-        # self.conv5 = SpectralConv1d(self.width, self.width, self.modes1)
-        # self.conv6 = SpectralConv1d(self.width, self.width, self.modes1)
+
 
         self.w0 = nn.Conv1d(self.width, self.width, 1)
         self.w1 = nn.Conv1d(self.width, self.width, 1)
         self.w2 = nn.Conv1d(self.width, self.width, 1)
         self.w3 = nn.Conv1d(self.width, self.width, 1)
         self.w4 = nn.Conv1d(self.width, self.width, 1)
-        # self.w5 = nn.Conv1d(self.width, self.width, 1)
-        # self.w6 = nn.Conv1d(self.width, self.width, 1)
 
         self.fc1 = nn.Linear(self.width, 128)
         self.fc2 = nn.Linear(128, 1)
-        # self.fc3 = nn.Linear(self.width, 1)
-        # self.fc4 = nn.Linear(64, 1)
-        # self.fc5 = nn.Linear(self.width, 1)
-        # self.fc6 = nn.Linear(64, 1)
 
         self.f1 = nn.Linear(self.interpolation_dim, 64)
         self.f2 = nn.Linear(64, 1)
@@ -126,33 +118,19 @@ class SPNO1d(nn.Module):
         x_n = torch.reshape(x, (x.shape[0], x.shape[1]))
         grid = torch.tensor(np.linspace(self.begin, self.end, x.shape[1]), dtype=torch.float)
         gridx = torch.tensor(np.linspace(self.begin, self.end, self.interpolation_dim), dtype=torch.float)
-
-        # # Move x_n and grid to CPU
         x_n = x_n.cpu()
         grid = grid.cpu()
-
-        # Interpolate using NumPy
         x_n = interpolate.interp1d(grid.numpy(), x_n.numpy())(gridx.numpy())
         x_n = torch.tensor(x_n, dtype=torch.float)
-
-        # Move x_n back to GPU if needed
         x_n = x_n.to(x.device)
-        # x_n=x.permute(0,2,1)
-        # x_n = F.interpolate(x_n, size=self.interpolation_dim, mode='linear', align_corners=False)
-        # x_n=x_n.permute(0,2,1)
-        # x_n = torch.reshape(x_n, (x_n.shape[0], x_n.shape[1]))
+
         c1 = self.f1(x_n)
         c1 = F.gelu(c1)
         c1 = self.f2(c1)
         c2 = self.f3(x_n)
         c2 = F.gelu(c2)
         c2 = self.f4(c2)
-        #
-        #
-        # grid = torch.tensor(np.linspace(self.begin, self.end, x.shape[1]), dtype=torch.float)
-        # gridx = torch.tensor(np.linspace(self.begin, self.end, self.interpolation_dim), dtype=torch.float)
 
-        ###########################
         # c1 = torch.cat((x, grid), dim=-1)
         # c1 = self.fc01(c1)
         # c1 = c1.permute(0, 2, 1)
@@ -160,11 +138,9 @@ class SPNO1d(nn.Module):
         # c1 = F.gelu(c1)
         # c1 = c1.permute(0, 2, 1)
         # c1 = self.fc5(c1)
-        ########################
-        # c1 = F.gelu(c1)
-        # c1 = self.fc6(c1)
 
-        #######################
+
+
         # c2 = torch.cat((x, grid), dim=-1)
         # c2 = self.fc02(c2)
         # c2 = c2.permute(0, 2, 1)
@@ -172,9 +148,8 @@ class SPNO1d(nn.Module):
         # c2 = F.gelu(c2)
         # c2 = c2.permute(0, 2, 1)
         # c2 = self.fc3(c2)
-        ########################
-        # c2 = F.gelu(c2)
-        # c2 = self.fc4(c2)
+
+
 
         grid = self.get_grid(x.shape, x.device)
         x_1 = torch.cat((self.fi01(x), self.fi02(-(grid - 0) / self.eps)), dim=-1)
@@ -201,16 +176,6 @@ class SPNO1d(nn.Module):
         x_2 = F.gelu(x_2)
         x_2 = self.fi6(x_2)
 
-        # x_1 = torch.cat((self.fi01(x), self.fi02((grid - 1) / self.eps)), dim=-1)
-        # x_1 = self.fi0(x_1)
-        # x_1 = x_1.permute(0, 2, 1)
-        # x_1 = self.coni0(x_1) + self.wi0(x_1)
-        # x_1 = F.gelu(x_1)
-        # x_1 = self.coni1(x_1) + self.wi1(x_1)
-        # x_1 = x_1.permute(0, 2, 1)
-        # x_1 = self.fi3(x_1)
-        # x_1 = F.gelu(x_1)
-        # x_1 = self.fi4(x_1)
 
         x = torch.cat((x, grid), dim=-1)
         x = self.fc0(x)
