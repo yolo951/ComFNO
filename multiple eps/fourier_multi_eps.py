@@ -25,11 +25,6 @@ np.random.seed(0)
 class SpectralConv1d(nn.Module):
     def __init__(self, in_channels, out_channels, modes1):
         super(SpectralConv1d, self).__init__()
-
-        """
-        1D Fourier layer. It does FFT, linear transform, and Inverse FFT.    
-        """
-
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.modes1 = modes1  #Number of Fourier modes to multiply, at most floor(N/2) + 1
@@ -59,18 +54,6 @@ class FNO1d(nn.Module):
     def __init__(self, modes, width, begin=0, end=1, input_num=1):
         super(FNO1d, self).__init__()
 
-        """
-        The overall network. It contains 4 layers of the Fourier layer.
-        1. Lift the input to the desire channel dimension by self.fc0 .
-        2. 4 layers of the integral operators u' = (W + K)(u).
-            W defined by self.w; K defined by self.conv .
-        3. Project from the channel space to the output space by self.fc1 and self.fc2 .
-        
-        input: the solution of the initial condition and location (a(x), x)
-        input shape: (batchsize, x=s, c=2)
-        output: the solution of a later timestep
-        output shape: (batchsize, x=s, c=1)
-        """
         self.begin = begin
         self.end = end
         self.modes1 = modes
